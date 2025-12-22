@@ -58,8 +58,11 @@
 </head>
 <body>
 
+   
+
     <div class="sidebar">
         <div class="sidebar-header">2025 RELEASES</div>
+        
         <div class="sidebar-menu">
             <div class="cat-item active" onclick="filterMonth('Jan', this)"><i class="fas fa-calendar"></i> January</div>
             <div class="cat-item" onclick="filterMonth('Feb', this)"><i class="fas fa-calendar"></i> February</div>
@@ -77,6 +80,11 @@
     </div>
 
     <div class="main-view">
+         <div class="search-box" style="position: relative; max-width: 800px; width: 100%;margin-bottom: 30px;">
+        <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #555;"></i>
+        <input type="text" id="searchInput" placeholder="Search movies across all months..." oninput="handleSearch()" 
+            style="width: 100%; padding: 12px 20px 12px 45px; border-radius: 30px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; outline: none;">
+    </div>
         <div class="header">
             <h1 id="monthLabel">January Movies</h1>
             <p>Selection: <span id="count" style="color:var(--accent)">0</span> / 10</p>
@@ -240,10 +248,31 @@
             renderGrid();
         }
 
-        function renderGrid() {
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const grid = document.getElementById('grid');
+            const label = document.getElementById('monthLabel');
+            if (query === "") {
+                const activeMonth = document.querySelector('.cat-item.active').innerText;
+                label.innerText = activeMonth + " Movies";
+                renderGrid();
+                return;
+            }
+            label.innerText = `Searching for: "${query}"`;
+            const searchResults = movies.filter(movie =>
+                movie.title.toLowerCase().includes(query)
+            );
+            displayMovies(searchResults);
+        }
+        
+        function displayMovies(movieList) {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
-            movies.filter(mov => mov.month === currentMonth).forEach(mov => {
+            if (movieList.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; opacity: 0.5;">No movies found.</p>';
+                return;
+            }
+            movieList.forEach(mov => {
                 const rankIndex = selection.indexOf(mov.title);
                 const isSelected = rankIndex !== -1;
                 grid.innerHTML += `
@@ -254,6 +283,11 @@
                     </div>
                 `;
             });
+        }
+
+        function renderGrid() {
+            const filtered = movies.filter(mov => mov.month === currentMonth);
+            displayMovies(filtered);
         }
 
         function toggleSelect(title) {
