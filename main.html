@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rank Movies | 2025</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        :root { --accent: #00d2ff; --bg: #0a0a0c; --card: #16161a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 260px; background: #111; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-header { padding: 40px 25px 20px; font-size: 1.1rem; color: var(--accent); font-weight: 600; letter-spacing: 2px; }
+        
+        .sidebar-menu { flex: 1; overflow-y: auto; padding: 0 15px 40px; }
+        .sidebar-menu::-webkit-scrollbar { width: 4px; }
+        .sidebar-menu::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        .cat-item { 
+            padding: 14px 20px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; 
+            transition: 0.3s; color: #777; font-size: 0.9rem; display: flex; align-items: center;
+        }
+        .cat-item i { margin-right: 12px; font-size: 0.8rem; }
+        .cat-item:hover, .cat-item.active { background: rgba(0, 210, 255, 0.1); color: white; }
+
+        .main-view { flex: 1; padding: 40px; overflow-y: auto; position: relative; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; }
+        
+        .movie-card {
+            background: var(--card); border-radius: 20px; overflow: hidden; cursor: pointer;
+            position: relative; transition: 0.4s; border: 1px solid rgba(255,255,255,0.03);
+        }
+        .movie-card:hover { transform: translateY(-10px); border-color: var(--accent); }
+        .movie-card img { width: 100%; height: 280px; object-fit: cover; opacity: 0.6; transition: 0.4s; }
+        .movie-card.selected img { opacity: 1; }
+
+         .rank-badge {
+            position: absolute; top: 15px; left: 15px; width: 35px; height: 35px;
+            background: var(--accent); color: #000; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 700; transform: scale(0); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .movie-card.selected .rank-badge { transform: scale(1); }
+
+        .info { padding: 15px; text-align: center; font-size: 0.85rem; }
+
+        .submit-panel { position: fixed; bottom: 30px; right: 40px; }
+        .submit-btn {
+            background: var(--accent); color: #000; padding: 15px 35px;
+            border-radius: 50px; border: none; font-weight: 600; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,210,255,0.3); display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">2025 RELEASES</div>
+        <div class="sidebar-menu">
+            <div class="cat-item active" onclick="filterMonth('Jan', this)"><i class="fas fa-calendar"></i> January</div>
+            <div class="cat-item" onclick="filterMonth('Feb', this)"><i class="fas fa-calendar"></i> February</div>
+            <div class="cat-item" onclick="filterMonth('Mar', this)"><i class="fas fa-calendar"></i> March</div>
+            <div class="cat-item" onclick="filterMonth('Apr', this)"><i class="fas fa-calendar"></i> April</div>
+            <div class="cat-item" onclick="filterMonth('may', this)"><i class="fas fa-calendar"></i> May</div>
+            <div class="cat-item" onclick="filterMonth('jun', this)"><i class="fas fa-calendar"></i> June</div>
+            <div class="cat-item" onclick="filterMonth('jul', this)"><i class="fas fa-calendar"></i> July</div>
+            <div class="cat-item" onclick="filterMonth('aug', this)"><i class="fas fa-calendar"></i> August</div>
+            <div class="cat-item" onclick="filterMonth('sep', this)"><i class="fas fa-calendar"></i> September</div>
+            <div class="cat-item" onclick="filterMonth('oct', this)"><i class="fas fa-calendar"></i> October</div>
+            <div class="cat-item" onclick="filterMonth('nov', this)"><i class="fas fa-calendar"></i> November</div>
+            <div class="cat-item" onclick="filterMonth('dec', this)"><i class="fas fa-calendar"></i> December</div>
+        </div>
+    </div>
+
+    <div class="main-view">
+        <div class="header">
+            <h1 id="monthLabel">January Movies</h1>
+            <p>Selection: <span id="count" style="color:var(--accent)">0</span> / 10</p>
+        </div>
+        <div class="movie-grid" id="grid"></div>
+    </div>
+
+    <div class="submit-panel">
+        <button class="submit-btn" id="submitBtn" onclick="submitRankings()">Submit My Ranking</button>
+    </div>
+
+    <form id="web3form" action="https://api.web3forms.com/submit" method="POST" style="display:none">
+        <input type="hidden" name="access_key" value="c17c5c42-d300-453d-a85f-175fac0b172a">
+        <input type="hidden" name="from_name" value="Movie Ranking App">
+        <input type="hidden" name="subject" value="New Movie Ranking Submitted">
+        <input type="hidden" name="Ranker_Name" id="form_name">
+        <input type="hidden" name="Top_10_List" id="form_list">
+        <input type="hidden" name="redirect" value="https://yourwebsite.com/response.html">
+    </form>
+
+    <script>
+        const movies = [
+           { id: 1, title: "Vanangaan", month: "Jan", img: "https://upload.wikimedia.org/wikipedia/en/5/55/Vanangaan_poster.jpg" },
+            { id: 2, title: "Madha Gaja Raja", month: "Jan", img: "https://upload.wikimedia.org/wikipedia/en/4/4d/Madha_Gaja_Raja.jpg" },
+            { id: 3, title: "Kadhalikka Neramillai", month: "Jan", img: "https://upload.wikimedia.org/wikipedia/en/d/d4/Kadhalikka_Neramillai_2025_poster.jpg" },
+            { id: 4, title: "Kudumbasthan", month: "Jan", img: "https://upload.wikimedia.org/wikipedia/en/d/d9/Kudumbasthan.jpg" },
+            { id: 5, title: "Mr. Housekeeping", month: "Jan", img: "https://upload.wikimedia.org/wikipedia/en/7/72/Mr._Housekeeping.jpg" },
+            { id: 6, title: "Nesippaya", month: "Jan", img: "https://upload.wikimedia.org/wikipedia/en/9/96/Nesippaya.jpg" },
+            { id: 7, title: "Madraskaaran", month: "Jan", img: "https://upload.wikimedia.org/wikipedia/en/4/4a/Madraskaaran.jpg" },
+
+            { id: 8, title: "Vidaamuyarchi", month: "Feb", img: "https://upload.wikimedia.org/wikipedia/en/0/04/Vidaamuyarchi.jpg" },
+            { id: 9, title: "2K Love Story", month: "Feb", img: "https://upload.wikimedia.org/wikipedia/en/6/63/2K_Love_Story.jpg" },
+            { id: 10, title: "Fire", month: "Feb", img: "https://upload.wikimedia.org/wikipedia/en/3/3f/Fire_%282025_film%29_poster.jpg" },     
+            { id: 11, title: "Dragon", month: "Feb", img: "https://upload.wikimedia.org/wikipedia/en/0/0f/Dragon_2025_poster.jpg" },
+            { id: 12, title: "Nilavuku En Mel Ennadi Kobam", month: "Feb", img: "https://upload.wikimedia.org/wikipedia/en/d/d7/Nilavuku_En_Mel_Ennadi_Kobam_poster.jpg" },
+            { id: 13, title: "Aghathiyaa", month: "Feb", img: "https://upload.wikimedia.org/wikipedia/en/1/13/Aghathiyaa_poster.jpg" },
+            { id: 14, title: "Sabdham", month: "Feb", img: "https://upload.wikimedia.org/wikipedia/en/2/21/Sabdham_poster.jpg" },
+            
+            { id: 15, title: "Kingston", month: "Mar", img: "https://upload.wikimedia.org/wikipedia/en/4/4c/Kingston_film_poster.jpg" },
+            { id: 16, title: "Murmur", month: "Mar", img: "https://upload.wikimedia.org/wikipedia/en/c/c4/Murmur_%282025_film%29.jpg" },
+            { id: 17, title: "Perusu", month: "Mar", img: "https://upload.wikimedia.org/wikipedia/en/9/9c/Perusu_poster.jpg" },
+            { id: 18, title: "Sweetheart!", month: "Mar", img: "https://upload.wikimedia.org/wikipedia/en/f/f3/Sweetheart%21.jpg" },
+            { id: 19, title: "Veera Dheera Sooran: Part 2", month: "Mar", img: "https://upload.wikimedia.org/wikipedia/en/5/5e/Veera_Dheera_Sooran.jpg" },
+            { id: 20, title: "Gentle Women", month: "Mar", img: "https://upload.wikimedia.org/wikipedia/en/a/a2/Gentlewoman_poster.jpg" },
+            
+            { id: 21, title: "Test", month: "Apr", img: "https://upload.wikimedia.org/wikipedia/en/3/34/Test_%282025_film%29.jpg" },
+            { id: 22, title: "Good Bad Ugly", month: "Apr", img: "https://upload.wikimedia.org/wikipedia/en/8/83/Good_Bad_Ugly_poster.jpg" },
+            { id: 23, title: "Naangal", month: "Apr", img: "https://upload.wikimedia.org/wikipedia/en/1/1c/Naangal_%282025_film%29.jpg" },
+            { id: 24, title: "Ten Hours", month: "Apr", img: "https://upload.wikimedia.org/wikipedia/en/2/21/Ten_Hours.jpg" },
+            { id: 25, title: "Gangers", month: "Apr", img: "https://upload.wikimedia.org/wikipedia/en/f/fb/Gangers_%28film%29_Poster.jpg" },
+            { id: 26, title: "Sumo", month: "Apr", img: "https://upload.wikimedia.org/wikipedia/en/7/77/Sumo_film_poster.jpg" },
+            { id: 27, title: "Vallamai", month: "Apr", img: "https://upload.wikimedia.org/wikipedia/en/1/1f/Vallamai.jpg" },
+
+            { id: 28, title: "Retro", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/d/df/Retro_film_poster.jpg" },
+            { id: 29, title: "Tourist Family", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/7/75/Tourist_Family.jpg" },
+            { id: 30, title: "En Kadhale", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/3/3c/En_Kadhale_poster.jpg" },
+            { id: 31, title: "Gajaana", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/f/f3/Gajaana_poster.jpg" },
+            { id: 32, title: "Kaliyugam ", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/9/98/Kaliyugam_%282025_film%29.jpg" },
+            { id: 33, title: "Nizharkudai", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/c/c6/Nizharkudai_Movie.jpeg" },
+            { id: 34, title: "Devil's Double Next Level", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/e/eb/DD_Next_Level_Poster.jpg" },
+            { id: 35, title: "Jora Kaiya Thattunga", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/f/f5/Jora_Kaiya_Thattunga.jpg" },
+            { id: 36, title: "Maaman", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/2/21/Maaman_Poster.jpeg" },
+            { id: 37, title: "Eleven", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/f/f3/Eleven_film_poster.jpg" },
+            { id: 38, title: "Ace ", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/4/40/Ace_film_poster.jpg" },
+            { id: 39, title: "School ", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/3/36/School_%282025_film%29.jpg" },
+            { id: 40, title: "Vembu ", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/9/92/Vembu_%282025_film%29.jpg" },
+            { id: 41, title: "Jinn – The Pet", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/d/df/Jinn_%E2%80%93_The_Pet.jpg" },
+            { id: 42, title: "Manidhargal", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/0/06/Manidhargal_first_look_poster.jpg" },
+            { id: 43, title: "Rajaputhiran", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/6/61/Rajaputhiran.jpg" },
+            { id: 44, title: "The Verdict ", month: "may", img: "https://upload.wikimedia.org/wikipedia/en/9/98/The_Verdict_%282025_film%29.jpg" },
+
+            { id: 45, title: "Peranbum Perungobamum", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/a/a0/Peranbum_Perungobamum.jpg" },
+            { id: 46, title: "Thug Life", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/9/95/Thug_Life_2025.jpg" },
+            { id: 47, title: "Madras Matinee", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/4/45/Madras_Matinee.jpg" },
+            { id: 48, title: "Paramasivan Fathima", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/5/5c/Paramasivan_Fathima.jpg" },
+            { id: 49, title: "Padai Thalaivan", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/e/e7/Padai_Thalaivan.jpg" },
+            { id: 50, title: "Chennai City Gangsters", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/e/e2/Chennai_City_Gangsters.jpg" },
+            { id: 51, title: "DNA", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/c/c2/DNA_%282025_film%29.jpg" },
+            { id: 52, title: "Kuberaa", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/a/a1/Kuberaa_poster.jpg" },
+            { id: 53, title: "Good Day", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/e/e3/Good_Day_film_poster.jpg" },
+            { id: 54, title: "Love Marriage", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/f/f6/Love_Marriage_%282025_film%29.jpg" },
+            { id: 55, title: "Maargan", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/a/ae/Maargan_poster.jpg" },
+            { id: 56, title: "Thirukkural ", month: "jun", img: "https://upload.wikimedia.org/wikipedia/en/4/4d/Thirukkural_%28film%29.jpg" },
+
+            { id: 57, title: "3BHK", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/a/a7/3BHK_poster.jpg" },
+            { id: 58, title: "Paranthu Po", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/e/e6/Paranthu_Po.jpg" },
+            { id: 59, title: "Phoenix ", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/1/19/Phoenix_%282025_film%29.jpg" },
+            { id: 60, title: "Desingu Raja 2", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/9/9e/Desingu_Raja_2.jpg" },
+            { id: 61, title: "Maayakoothu", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/a/ae/Maayakoothu.jpg" },
+            { id: 62, title: "Mrs & Mr", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/1/10/Mrs_%26_Mr_Poster.jpg" },
+            { id: 63, title: "Oho Enthan Baby", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/b/b0/Oho_Enthan_Baby.jpg" },
+            { id: 64, title: "Bun Butter Jam", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/f/fb/Bun_Butter_Jam.jpg" },
+            { id: 65, title: "Maareesan", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/d/d6/Maareesan.jpg" },
+            { id: 66, title: "Thalaivan Thalaivii", month: "jul", img: "https://upload.wikimedia.org/wikipedia/en/2/20/Thalaivan_Thalaivii.jpg" },
+
+            { id: 67, title: "House Mates", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/0/09/House_Mates_poster.jpg" },
+            { id: 68, title: "Mr Zoo Keeper", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/c/cb/Mr_Zoo_Keeper.jpg" },
+            { id: 69, title: "Muthal Pakkam", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/6/60/Muthal_Pakkam.jpg" },
+            { id: 70, title: "Surrender", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/2/2b/Surrender_%282025_film%29.jpg" },
+            { id: 71, title: "Usurae", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/9/9c/Usurae_poster.jpg" },
+            { id: 72, title: "Raagu Kethu", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/9/9a/Raagu_Kethu.jpg" },
+            { id: 73, title: "Red Flower", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/b/b6/Red_Flower_poster.jpg" },
+            { id: 74, title: "Vaanaran", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/a/aa/Vaanaran.jpg" },
+            { id: 75, title: "Coolie ", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/a/a8/Coolie_%282025_film%29_poster.jpg" },
+            { id: 76, title: "Indra", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/8/85/Indra_%282025_film%29.jpg" },
+            { id: 77, title: "Naruvee", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/3/38/Naruvee.jpg" },
+            { id: 78, title: "Sotta Sotta Nanaiyuthu", month: "aug", img: "https://upload.wikimedia.org/wikipedia/en/4/46/Sotta_Sotta_Nanaiyuthu.jpg" },
+
+            { id: 79, title: "Bad Girl", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/0/06/Bad_Girl_%282025_film%29.jpg" },
+            { id: 80, title: "Gandhi Kannadi", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/2/2d/Gandhi_Kannadi.jpg" },
+            { id: 81, title: "Madharaasi", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/0/00/Madharaasi_poster.jpg" },
+            { id: 82, title: "Blackmail ", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/8/8e/Blackmail_%282025_film%29.jpg" },
+            { id: 83, title: "Bomb", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/9/96/Bomb_%28film%29.jpg" },
+            { id: 84, title: "Kumaara Sambavam", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/8/84/Kumaara_Sambavam.jpg" },
+            { id: 85, title: "Thanal ", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/e/e9/Thanal_%282025_film%29.jpg" },
+            { id: 86, title: "Kiss ", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/d/d7/Kiss_%282025_film%29_poster.jpg" },
+            { id: 87, title: "Shakthi Thirumagan", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/3/3b/Shakthi_Thirumagan.jpg" },
+            { id: 88, title: "Thandakaaranyam", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/f/f4/Thandakaaranyam.jpg" },
+            { id: 89, title: "Padaiyaanda Maaveeraa", month: "sep", img: "https://upload.wikimedia.org/wikipedia/en/d/d6/Padaiyaanda_Maaveeraa.jpg" },
+
+            { id: 90, title: "Idli Kadai", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/8/88/Idli_Kadai.jpg" },
+            { id: 91, title: "Maria ", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/d/de/Maria_%282025_film%29.jpg" },
+            { id: 92, title: "Marutham ", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/5/53/Marutham_film_poster.jpg" },
+            { id: 93, title: "Bison - Kaalamaadan", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/6/67/Bison_Kaalamaadan.jpg" },
+            { id: 94, title: "Diesel ", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/b/be/Diesel_%282025_film%29.jpg" },
+            { id: 95, title: "Dude ", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/d/de/Dude_%282025%29_Poster.jpeg" },
+            { id: 96, title: "Aan Paavam Pollathathu", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/d/d4/Aan_Paavam_Pollathathu.jpg" },
+            { id: 97, title: "Aaryan ", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/a/a7/Aaryan_poster.jpg" },
+            { id: 98, title: "Ram Abdullah Antony", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/2/29/Ram_Abdullah_Antony.jpg" },
+            { id: 99, title: "Kambi Katna Kathai", month: "oct", img: "https://upload.wikimedia.org/wikipedia/en/c/c0/Kambi_Katna_Kathai.jpg" },
+            
+            { id: 100, title: "Aaromaley", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/c/cf/Aaromaley.jpg" },
+            { id: 101, title: "Kaantha", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/9/91/Kaantha.jpg" },
+            { id: 102, title: "Kumki 2", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/b/ba/Kumki_2.jpg" },
+            { id: 103, title: "Madharas Mafia Company", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/7/7c/Madharas_Mafia_Company.jpg" },
+            { id: 104, title: "Mask ", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/9/95/Mask_%282025_film%29.jpg" },
+            { id: 105, title: "Middle Class", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/8/82/Middle_Class_poster.jpg" },
+            { id: 106, title: "Theeyavar Kulai Nadunga", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/1/1e/Theeyavar_Kulai_Nadunga.jpg" },
+            { id: 107, title: "Rajini Gaang", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/8/8f/Rajini_Gaang.jpg" },
+            { id: 108, title: "Yellow ", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/d/d3/Yellow_%282025_film%29.jpg" },
+            { id: 109, title: "Indian Penal Law", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/f/ff/Indian_Penal_Law_poster.jpg" },
+            { id: 110, title: "Revolver Rita", month: "nov", img: "https://upload.wikimedia.org/wikipedia/en/0/0a/Revolver_Rita.jpg" },
+
+
+            { id: 111, title: "Angammal", month: "dec", img: "https://upload.wikimedia.org/wikipedia/en/c/c8/Angammal.jpg" },
+            { id: 112, title: "Kannagi Nagar", month: "dec", img: "https://upload.wikimedia.org/wikipedia/en/b/b3/Kannagi_Nagar_poster.jpg" },
+            { id: 113, title: "Stephen ", month: "dec", img: "https://upload.wikimedia.org/wikipedia/en/1/18/Stephen_poster.jpg" },
+            { id: 114, title: "Mahasenha", month: "dec", img: "https://upload.wikimedia.org/wikipedia/en/8/83/Mahasenha.jpg" },
+            { id: 115, title: "Kombuseevi", month: "dec", img: "https://upload.wikimedia.org/wikipedia/en/5/56/Kombuseevi.jpg" },
+
+        ];
+
+        let selection = [];
+        let currentMonth = "Jan";
+
+        function filterMonth(m, el) {
+            currentMonth = m;
+            document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('monthLabel').innerText = el.innerText + " Movies";
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            movies.filter(mov => mov.month === currentMonth).forEach(mov => {
+                const rankIndex = selection.indexOf(mov.title);
+                const isSelected = rankIndex !== -1;
+                grid.innerHTML += `
+                    <div class="movie-card ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${mov.title}')">
+                        <div class="rank-badge">${rankIndex + 1}</div>
+                        <img src="${mov.img}">
+                        <div class="info"><h3>${mov.title}</h3></div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleSelect(title) {
+            const index = selection.indexOf(title);
+            if(index > -1) {
+                selection.splice(index, 1);
+            } else {
+                if(selection.length < 10) selection.push(title);
+                else alert("You already selected 10 movies!");
+            }
+            document.getElementById('count').innerText = selection.length;
+            document.getElementById('submitBtn').style.display = selection.length > 0 ? 'block' : 'none';
+            renderGrid();
+        }
+
+        function submitRankings() {
+            const name = localStorage.getItem('userName');
+            document.getElementById('form_name').value = name;
+            document.getElementById('form_list').value = selection.map((t, i) => `${i+1}. ${t}`).join(', ');
+            
+             document.getElementById('web3form').submit();
+            
+            setTimeout(() => { window.location.href = 'response.html'; }, 1000);
+        }
+
+        renderGrid();
+    </script>
+</body>
+</html>

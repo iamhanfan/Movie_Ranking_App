@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieRank 2025 | Entry</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body {
+            background: #050505;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        /* Animated Background Gradients */
+        body::before {
+            content: ""; position: absolute; width: 300px; height: 300px;
+            background: linear-gradient(45deg, #ff0055, #00d2ff);
+            filter: blur(150px); top: 10%; left: 10%; z-index: -1;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            padding: 60px 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            width: 400px;
+        }
+        h1 { color: white; margin-bottom: 10px; font-weight: 600; letter-spacing: 1px; }
+        p { color: #888; margin-bottom: 30px; font-size: 0.9rem; }
+        .input-box { position: relative; }
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: #00d2ff; background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
+        .error-msg { color: #ff4d4d; font-size: 0.8rem; margin-top: 8px; display: none; }
+        .next-btn {
+            margin-top: 30px;
+            width: 60px; height: 60px;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            border: none; border-radius: 50%;
+            color: white; font-size: 1.5rem;
+            cursor: pointer; transition: 0.4s;
+            display: inline-flex; justify-content: center; align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
+        }
+        .next-btn:hover { transform: scale(1.1) rotate(360deg); }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h1>Welcome</h1>
+        <p>Rank the best of Tamil Cinema 2025</p>
+        <div class="input-box">
+            <input type="text" id="userName" placeholder="Enter your name..." autocomplete="off">
+            <p class="error-msg" id="error">Please enter your name to continue</p>
+        </div>
+        <button class="next-btn" onclick="checkName()">
+            <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        function checkName() {
+            const name = document.getElementById('userName').value.trim();
+            if (name === "") {
+                document.getElementById('error').style.display = 'block';
+            } else {
+                localStorage.setItem('movieRankerName', name);
+                window.location.href = 'main.html';
+            }
+        }
+    </script>
+</body>
+</html>

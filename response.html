@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submitted!</title>
+    <style>
+        body {
+            background: #0a0a0c; color: white; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Poppins', sans-serif; text-align: center;
+        }
+        .container {
+            padding: 60px; border-radius: 30px;
+            background: rgba(255,255,255,0.03); border: 1px solid #00d2ff;
+        }
+        h1 { color: #00d2ff; font-size: 3rem; margin-bottom: 15px; }
+        p { opacity: 0.7; font-size: 1.1rem; }
+        .back-btn {
+            margin-top: 30px; display: inline-block; padding: 12px 35px;
+            border: 1px solid #00d2ff; color: #00d2ff; text-decoration: none;
+            border-radius: 20px; transition: 0.3s;
+        }
+        .back-btn:hover { background: #00d2ff; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rankings Sent!</h1>
+        <p id="msg">Your Top 10 has been sent </p>
+        <a href="index.html" class="back-btn">Submit Another</a>
+    </div>
+    <script>
+        const name = localStorage.getItem('userName') || "User";
+        document.getElementById('msg').innerText = `Thank you, ${name}! Your rankings have been delivered to iamhanfan.`;
+    </script>
+</body>
+</html>
