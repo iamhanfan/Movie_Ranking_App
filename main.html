@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rank Movies | 2025</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
         :root { --accent: #00d2ff; --bg: #0a0a0c; --card: #16161a; }
@@ -62,12 +63,103 @@
 
         .submit-panel { position: fixed; bottom: 30px; right: 40px; z-index: 99; }
         .submit-btn { background: var(--accent); color: #000; padding: 15px 35px; border-radius: 50px; border: none; font-weight: 600; cursor: pointer; box-shadow: 0 10px 30px rgba(0,210,255,0.3); display: none; }
+
+        .reorder-drawer {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(100% - 50px)); /* Hidden by default */
+    width: 100%;
+    max-width: 600px;
+    background: rgba(22, 22, 26, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(0, 210, 255, 0.3);
+    border-radius: 25px 25px 0 0;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+}
+
+.reorder-drawer.active {
+    transform: translateX(-50%) translateY(0);
+}
+
+.drawer-header {
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.drawer-content {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px 20px 80px 20px;
+}
+
+.reorder-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    animation: fadeIn 0.3s ease;
+}
+
+.reorder-item .rank-num {
+    color: var(--accent);
+    font-weight: bold;
+    margin-right: 15px;
+    width: 25px;
+}
+
+.reorder-item .movie-name {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.reorder-controls button {
+    background: none;
+    border: none;
+    color: #555;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.reorder-controls button:hover {
+    color: var(--accent);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hide submit button when drawer is closed to avoid overlapping on mobile */
+.submit-btn {
+    z-index: 1001;
+}
     </style>
 </head>
 <body>
 
    
-
+    <div id="reorderDrawer" class="reorder-drawer">
+        <div class="drawer-header" onclick="toggleDrawer()">
+            <span><i class="fas fa-list-ol" style="margin-right:10px;"></i> Reorder Your Top 10</span>
+            <i id="drawerArrow" class="fas fa-chevron-up"></i>
+        </div>
+        <div class="drawer-content" id="drawerList">
+            <!-- Reorder items will be injected here -->
+        </div>
+    </div>
     <div class="sidebar">
         <div class="sidebar-header">2025 RELEASES</div>
         
@@ -303,12 +395,15 @@
             if(index > -1) {
                 selection.splice(index, 1);
             } else {
-                if(selection.length < 10) selection.push(title);
-                else alert("You already selected 10 movies!");
+                if(selection.length < 10) {
+                    selection.push(title);
+                } else {
+                    alert("You already selected 10 movies!");
+                }
             }
-            document.getElementById('count').innerText = selection.length;
-            document.getElementById('submitBtn').style.display = selection.length > 0 ? 'block' : 'none';
-            renderGrid();
+            // Call updateUI instead of manually updating count and grid
+            // updateUI() handles: the count, the submit button, the grid badges, AND the drawer list
+            updateUI(); 
         }
 
         function submitRankings() {
@@ -322,7 +417,70 @@
             setTimeout(() => { window.location.href = 'response.html'; }, 1000);
         }
 
-        renderGrid();
+        function toggleDrawer() {
+            const drawer = document.getElementById('reorderDrawer');
+            const arrow = document.getElementById('drawerArrow');
+            drawer.classList.toggle('active');
+            
+            if(drawer.classList.contains('active')) {
+                arrow.className = 'fas fa-chevron-down';
+            } else {
+                arrow.className = 'fas fa-chevron-up';
+            }
+        }
+
+        // Function to Move Movie Up in Rank
+        function moveUp(index, event) {
+            event.stopPropagation();
+            if (index > 0) {
+                const temp = selection[index];
+                selection[index] = selection[index - 1];
+                selection[index - 1] = temp;
+                updateUI();
+            }
+        }
+
+        function moveDown(index, event) {
+            event.stopPropagation();
+            if (index < selection.length - 1) {
+                const temp = selection[index];
+                selection[index] = selection[index + 1];
+                selection[index + 1] = temp;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('count').innerText = selection.length;
+            document.getElementById('submitBtn').style.display = selection.length > 0 ? 'block' : 'none';
+            
+            // 1. Refresh the Main Grid (to update badge numbers)
+            renderGrid();
+
+            // 2. Refresh the Reorder Drawer List
+            const drawerList = document.getElementById('drawerList');
+            drawerList.innerHTML = '';
+            
+            if(selection.length === 0) {
+                drawerList.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No movies selected yet.</p>';
+                return;
+            }
+
+            selection.forEach((title, index) => {
+                drawerList.innerHTML += `
+                    <div class="reorder-item">
+                        <div class="rank-num">${index + 1}</div>
+                        <div class="movie-name">${title}</div>
+                        <div class="reorder-controls">
+                            <button onclick="moveUp(${index}, event)"><i class="fas fa-arrow-up"></i></button>
+                            <button onclick="moveDown(${index}, event)"><i class="fas fa-arrow-down"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        updateUI();
     </script>
 </body>
 </html>
