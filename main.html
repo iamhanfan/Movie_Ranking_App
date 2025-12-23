@@ -264,7 +264,7 @@
             );
             displayMovies(searchResults);
         }
-        
+
         function displayMovies(movieList) {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
@@ -304,11 +304,12 @@
         }
 
         function submitRankings() {
-            localStorage.getItem('movieRankerName'); 
+            const name = localStorage.getItem('movieRankerName') || "Anonymous"; 
+            
             document.getElementById('form_name').value = name;
             document.getElementById('form_list').value = selection.map((t, i) => `${i+1}. ${t}`).join(', ');
             
-             document.getElementById('web3form').submit();
+            document.getElementById('web3form').submit();
             
             setTimeout(() => { window.location.href = 'response.html'; }, 1000);
         }
