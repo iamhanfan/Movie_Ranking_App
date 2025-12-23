@@ -25,12 +25,13 @@
         .login-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(20px);
-            padding: 60px 40px;
+            padding: 40px 20px; /* Reduced padding for mobile */
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            width: 400px;
+            width: 90%; /* Responsive width */
+            max-width: 400px; /* Cap for desktop */
         }
         h1 { color: white; margin-bottom: 10px; font-weight: 600; letter-spacing: 1px; }
         p { color: #888; margin-bottom: 30px; font-size: 0.9rem; }
